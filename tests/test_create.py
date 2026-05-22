@@ -129,7 +129,7 @@ class TestCreateWithWorktree:
         from anvil.exceptions import CreateFailedError
 
         subprocess.run(
-            ["git", "branch", "already-exists"],
+            ["git", "branch", "already-exists", "HEAD"],
             cwd=local_repo,
             check=True,
         )
