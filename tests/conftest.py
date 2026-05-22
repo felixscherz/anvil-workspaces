@@ -56,7 +56,9 @@ def bare_remote(tmp_path: Path) -> Path:
     make_initial_commit(seed, branch="main")
     add_origin_remote(seed, str(remote))
     _run(["git", "push", "origin", "main"], cwd=seed)
-    _run(["git", "remote", "set-head", "origin", "main"], cwd=seed)
+    # Explicitly point the bare repo's HEAD to main so `git clone` checks it out
+    # correctly regardless of the system's init.defaultBranch setting.
+    _run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=remote)
     return remote
 
 
