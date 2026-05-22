@@ -157,7 +157,6 @@ class RepoAlreadyInWorkspaceError(AnvilError):
 class NotAnAnvilWorkspaceError(AnvilError):
     def __init__(self, target: Path) -> None:
         super().__init__(
-            f"'{target}' is not an existing Anvil workspace. "
-            "Run 'anvil create' first."
+            f"'{target}' is not an existing Anvil workspace. Run 'anvil create' first."
         )
         self.target = target

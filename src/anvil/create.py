@@ -238,7 +238,6 @@ def run_add(
     the manifest with the new entries appended.
     On any failure, rolls back only the repos created in this run.
     """
-    from anvil.exceptions import DuplicateRepoNameError
 
     if not target.exists():
         raise NotAnAnvilWorkspaceError(target)

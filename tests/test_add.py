@@ -28,9 +28,7 @@ class TestRunAdd:
         second_repo = tmp_path / "second_repo"
         import subprocess
 
-        subprocess.run(
-            ["git", "clone", str(bare_remote), str(second_repo)], check=True
-        )
+        subprocess.run(["git", "clone", str(bare_remote), str(second_repo)], check=True)
         subprocess.run(
             ["git", "remote", "set-head", "origin", "main"], cwd=second_repo, check=True
         )
@@ -60,9 +58,7 @@ class TestRunAdd:
         import subprocess
 
         second_repo = tmp_path / "second_repo"
-        subprocess.run(
-            ["git", "clone", str(bare_remote), str(second_repo)], check=True
-        )
+        subprocess.run(["git", "clone", str(bare_remote), str(second_repo)], check=True)
         subprocess.run(
             ["git", "remote", "set-head", "origin", "main"], cwd=second_repo, check=True
         )
@@ -84,9 +80,7 @@ class TestRunAdd:
         import subprocess
 
         second_repo = tmp_path / "second_repo"
-        subprocess.run(
-            ["git", "clone", str(bare_remote), str(second_repo)], check=True
-        )
+        subprocess.run(["git", "clone", str(bare_remote), str(second_repo)], check=True)
         subprocess.run(
             ["git", "remote", "set-head", "origin", "main"], cwd=second_repo, check=True
         )
@@ -103,7 +97,9 @@ class TestRunAdd:
         assert reloaded.created_at == original.created_at
         assert len(reloaded.repos) == 2
 
-    def test_fails_on_nonexistent_workspace(self, tmp_path: Path, local_repo: Path) -> None:
+    def test_fails_on_nonexistent_workspace(
+        self, tmp_path: Path, local_repo: Path
+    ) -> None:
         specs = classify_all([str(local_repo)])
         with pytest.raises(NotAnAnvilWorkspaceError):
             run_add(tmp_path / "does-not-exist", specs)
@@ -127,9 +123,7 @@ class TestRunAdd:
         import subprocess
 
         second_repo = tmp_path / "second_repo"
-        subprocess.run(
-            ["git", "clone", str(bare_remote), str(second_repo)], check=True
-        )
+        subprocess.run(["git", "clone", str(bare_remote), str(second_repo)], check=True)
         subprocess.run(
             ["git", "remote", "set-head", "origin", "main"], cwd=second_repo, check=True
         )
@@ -167,9 +161,7 @@ class TestAddCLI:
         import subprocess
 
         second_repo = tmp_path / "second_repo"
-        subprocess.run(
-            ["git", "clone", str(bare_remote), str(second_repo)], check=True
-        )
+        subprocess.run(["git", "clone", str(bare_remote), str(second_repo)], check=True)
         subprocess.run(
             ["git", "remote", "set-head", "origin", "main"], cwd=second_repo, check=True
         )
@@ -178,9 +170,7 @@ class TestAddCLI:
         specs = classify_all([str(local_repo)])
         run_create(target, specs, "feature-cli-add")
 
-        result = runner.invoke(
-            app, ["add", "--target", str(target), str(second_repo)]
-        )
+        result = runner.invoke(app, ["add", "--target", str(target), str(second_repo)])
         assert result.exit_code == 0, result.output
         assert second_repo.name in result.output
 
@@ -188,7 +178,9 @@ class TestAddCLI:
         result = runner.invoke(app, ["add", "--target", str(tmp_path)])
         assert result.exit_code != 0
 
-    def test_add_nonexistent_workspace_fails(self, tmp_path: Path, local_repo: Path) -> None:
+    def test_add_nonexistent_workspace_fails(
+        self, tmp_path: Path, local_repo: Path
+    ) -> None:
         result = runner.invoke(
             app,
             ["add", "--target", str(tmp_path / "nope"), str(local_repo)],
