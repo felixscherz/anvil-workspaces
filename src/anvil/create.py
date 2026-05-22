@@ -15,11 +15,13 @@ from anvil.exceptions import (
     DefaultBranchResolutionError,
     NoOriginRemoteError,
     NotAGitRepositoryError,
+    NotAnAnvilWorkspaceError,
+    RepoAlreadyInWorkspaceError,
     RollbackError,
     TargetNotEmptyError,
     TargetParentMissingError,
 )
-from anvil.manifest import anvil_dir, now_utc_iso, write_manifest
+from anvil.manifest import anvil_dir, now_utc_iso, read_manifest, write_manifest
 from anvil.models import CreationMode, Manifest, RepoEntry, RepoSpec, SpecifierType
 
 
@@ -224,3 +226,71 @@ def run_create(
     )
     write_manifest(manifest)
     return manifest
+
+
+def run_add(
+    target: Path,
+    specs: list[RepoSpec],
+) -> Manifest:
+    """
+    Add repositories to an existing Anvil workspace.
+    Reads the branch name from the manifest, creates the repos, and rewrites
+    the manifest with the new entries appended.
+    On any failure, rolls back only the repos created in this run.
+    """
+    from anvil.exceptions import DuplicateRepoNameError
+
+    if not target.exists():
+        raise NotAnAnvilWorkspaceError(target)
+
+    manifest = read_manifest(target)
+    branch = manifest.branch_name
+    existing_names = {r.name for r in manifest.repos}
+
+    # Check for collisions against both the existing manifest and the new specs
+    for spec in specs:
+        if spec.name in existing_names:
+            raise RepoAlreadyInWorkspaceError(spec.name, target)
+
+    created: list[_CreatedWorktree | _CreatedClone] = []
+    new_entries: list[RepoEntry] = []
+
+    for spec in specs:
+        try:
+            if spec.specifier_type == SpecifierType.PATH:
+                entry = _create_worktree_repo(spec, target, branch)
+                source = Path(spec.specifier).resolve()
+                created.append(
+                    _CreatedWorktree(
+                        source=source, worktree_path=entry.repo_path, branch=branch
+                    )
+                )
+            else:
+                entry = _create_clone_repo(spec, target, branch)
+                created.append(_CreatedClone(clone_path=entry.repo_path))
+
+            new_entries.append(entry)
+            typer.echo(f"  + {spec.name} -> {entry.repo_path}")
+
+        except Exception as exc:
+            typer.echo(f"Error processing '{spec.specifier}': {exc}", err=True)
+            typer.echo("Rolling back...", err=True)
+            rollback_errors: str | None = None
+            try:
+                # target_was_created=False: never remove the workspace itself
+                _rollback(created, target, target_was_created=False)
+            except RollbackError as re:
+                rollback_errors = re.details
+            if rollback_errors:
+                typer.echo(f"Rollback errors:\n{rollback_errors}", err=True)
+            raise CreateFailedError(spec.specifier, len(created), exc) from exc
+
+    updated = Manifest(
+        version=manifest.version,
+        workspace_root=manifest.workspace_root,
+        branch_name=manifest.branch_name,
+        created_at=manifest.created_at,
+        repos=list(manifest.repos) + new_entries,
+    )
+    write_manifest(updated)
+    return updated

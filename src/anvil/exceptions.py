@@ -143,3 +143,21 @@ class EmptyRepoNameError(AnvilError):
 class NoRepoSpecifiersError(AnvilError):
     def __init__(self) -> None:
         super().__init__("At least one repository specifier must be provided.")
+
+
+class RepoAlreadyInWorkspaceError(AnvilError):
+    def __init__(self, name: str, workspace: Path) -> None:
+        super().__init__(
+            f"Repository '{name}' already exists in workspace '{workspace}'."
+        )
+        self.name = name
+        self.workspace = workspace
+
+
+class NotAnAnvilWorkspaceError(AnvilError):
+    def __init__(self, target: Path) -> None:
+        super().__init__(
+            f"'{target}' is not an existing Anvil workspace. "
+            "Run 'anvil create' first."
+        )
+        self.target = target

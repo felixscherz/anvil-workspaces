@@ -9,7 +9,7 @@ import typer
 
 from anvil.classify import classify_all
 from anvil.clean import run_clean
-from anvil.create import run_create
+from anvil.create import run_add, run_create
 from anvil.exceptions import AnvilError, NoRepoSpecifiersError
 from anvil.naming import infer_branch_name
 
@@ -87,6 +87,37 @@ def clean_command(
     """Remove the workspace described by the manifest at TARGET."""
     try:
         run_clean(target.resolve(), yes=yes)
+    except AnvilError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("add")
+def add_command(
+    target: Annotated[
+        Path,
+        typer.Option(
+            "--target", help="Path to an existing Anvil workspace.", show_default=False
+        ),
+    ],
+    repos: Annotated[
+        list[str],
+        typer.Argument(help="Repository specifiers (local paths or clone URLs)."),
+    ],
+) -> None:
+    """Add repositories to an existing workspace at TARGET."""
+    try:
+        if not repos:
+            raise NoRepoSpecifiersError()
+
+        specs = classify_all(repos)
+        manifest = run_add(target.resolve(), specs)
+
+        typer.echo(f"\nUpdated Anvil workspace: {manifest.workspace_root}")
+        typer.echo(f"Branch: {manifest.branch_name}")
+        for entry in manifest.repos:
+            typer.echo(f"  - {entry.name} -> {entry.repo_path}")
+
     except AnvilError as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(1)

@@ -73,9 +73,18 @@ Skip the prompt with `--yes`:
 anvil clean --target /tmp/workspaces/feature-abc --yes
 ```
 
+### Add a repository to an existing workspace
+
+```bash
+anvil add --target /tmp/workspaces/feature-abc ~/repos/another-service
+```
+
+Anvil reads the branch name from the existing manifest (`feature-abc`) and creates the new repository on that same branch. The manifest is updated in place with the new entry appended. Rollback applies only to repos added in the current run — existing workspace members are untouched.
+
 ## Notes
 
 - The branch name is derived from the basename of `--target`. `/tmp/workspaces/feature-abc` → `feature-abc`.
+- `anvil add` reads the branch name from the existing manifest — the target directory name is irrelevant.
 - The same branch name is created in every repository in the workspace — this is expected and correct.
-- If any repository fails during `create`, Anvil rolls back everything created in that run.
+- If any repository fails during `create` or `add`, Anvil rolls back only the repos created in that run.
 - Anvil will refuse to proceed if the target is non-empty, if a derived branch already exists, or if two repositories share the same derived name.
