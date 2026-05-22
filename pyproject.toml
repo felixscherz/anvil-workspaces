@@ -1,6 +1,6 @@
 [project]
-name = "anvil"
-version = "0.1.0"
+name = "anvil-workspaces"
+dynamic = ["version"]
 description = "Create isolated multi-repository workspaces for engineering tasks"
 readme = "README.md"
 authors = [
@@ -15,8 +15,14 @@ dependencies = [
 anvil = "anvil.main:app"
 
 [build-system]
-requires = ["uv_build>=0.10.7,<0.11.0"]
-build-backend = "uv_build"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/anvil/_version.py"
 
 [dependency-groups]
 dev = [
@@ -24,10 +30,10 @@ dev = [
   "ruff>=0.6",
   "ty>=0.0.1a14",
   "pre-commit>=3.8",
+  "hatch-vcs>=0.4",
+  "git-cliff>=2",
 ]
 
 [tool.ruff]
 target-version = "py311"
 
-[tool.ty]
-environment = ".venv"

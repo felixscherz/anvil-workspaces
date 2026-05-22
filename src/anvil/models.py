@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import cast
 
 
 class SpecifierType(str, Enum):
@@ -94,7 +95,11 @@ class Manifest:
         repos_raw = data.get("repos", [])
         if not isinstance(repos_raw, list):
             repos_raw = []
-        repos = [RepoEntry.from_dict(r) for r in repos_raw]  # type: ignore[arg-type]
+        repos = [
+            RepoEntry.from_dict(cast(dict[str, object], r))
+            for r in repos_raw
+            if isinstance(r, dict)
+        ]
         return cls(
             version=int(str(data["version"])),
             workspace_root=Path(str(data["workspaceRoot"])),
