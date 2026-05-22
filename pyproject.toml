@@ -1,0 +1,33 @@
+[project]
+name = "anvil"
+version = "0.1.0"
+description = "Create isolated multi-repository workspaces for engineering tasks"
+readme = "README.md"
+authors = [
+    { name = "Felix Scherz", email = "felixwscherz@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+]
+
+[project.scripts]
+anvil = "anvil.main:app"
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "ty>=0.0.1a14",
+  "pre-commit>=3.8",
+]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ty]
+environment = ".venv"
