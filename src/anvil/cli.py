@@ -12,6 +12,7 @@ from anvil.clean import run_clean
 from anvil.create import run_add, run_create
 from anvil.exceptions import AnvilError, NoRepoSpecifiersError
 from anvil.naming import infer_branch_name
+from anvil.run import run_command
 
 _BANNER = """\
  █████╗ ███╗   ██╗██╗   ██╗██╗██╗     
@@ -26,7 +27,7 @@ _DESCRIPTION = "Create isolated multi-repository workspaces for engineering task
 app = typer.Typer(
     name="anvil",
     help=f"\b\n{_BANNER}\n\n{_DESCRIPTION}",
-    add_completion=False,
+    add_completion=True,
     rich_markup_mode=None,
 )
 
@@ -121,3 +122,42 @@ def add_command(
     except AnvilError as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(1)
+
+
+@app.command(
+    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
+def run_command_cli(
+    ctx: typer.Context,
+    workspace: Annotated[
+        Path,
+        typer.Option(
+            "--workspace",
+            help="Path to an Anvil workspace directory.",
+            show_default=False,
+        ),
+    ],
+    parallel: Annotated[
+        bool,
+        typer.Option("--parallel", help="Run command in all repos concurrently."),
+    ] = False,
+) -> None:
+    """Run an arbitrary command in every repo of the workspace.
+
+    Pass the command after a -- separator, e.g.:
+
+        anvil run --workspace ./my-ws -- git status
+    """
+    command = ctx.args
+    if not command:
+        typer.echo("Error: No command provided. Pass the command after --.", err=True)
+        raise typer.Exit(1)
+
+    try:
+        rc = run_command(workspace.resolve(), command, parallel=parallel)
+    except AnvilError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
+
+    if rc != 0:
+        raise typer.Exit(rc)
